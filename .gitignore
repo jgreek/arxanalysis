@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+*.pyd
+*.swp
+*.swo
+*.swn
+*.spec
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDE - PyCharm
+.idea/
+
+# macOS .DS_Store files
+.DS_Store
+
+# Config directory
+/config/
+
+# Virtual environment
+venv/
+
+# Other common directories to exclude (optional, but recommended)
+__pypackages__/
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Database
+*.db
+*.sqlite3
