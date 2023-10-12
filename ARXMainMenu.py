@@ -4,6 +4,8 @@ from pathlib import Path
 import click
 
 from ARXApiDataAcquire import ARXApiDataAcquire
+from ARXPortfolioManager import ARXPortfolioManager
+from ARXPortfolioSimulation import ARXPortfolioSimulation
 from ARXYieldDataAccess import ARXYieldDataAccess
 
 
@@ -12,7 +14,14 @@ class ARXYieldDataAnalysisCLI:
     def __init__(self, configuration_directory):
         self.configuration_directory = configuration_directory
         self.portfolio_path = self.configuration_directory / 'portfolio.json'
-        self.portfolio = self.load_portfolio()
+        self.yield_data_access = ARXYieldDataAccess(data_directory=Path("sources"), config_directory=Path("config"),
+                                                    sql_directory=Path("SQL"))
+        self.portfolio_manager = ARXPortfolioManager(self.configuration_directory / 'portfolio.json',
+                                                     self.yield_data_access)
+        start_date = "2021-01-01"  # Replace with your desired start date
+        end_date = "2022-12-31"  # Replace with your desired end date
+        df = self.yield_data_access.execute_get_yield_data_by_date_range(start_date, end_date)
+        self.portfolio_simulation = ARXPortfolioSimulation(data=df)
 
     def load_portfolio(self):
         try:
@@ -26,6 +35,7 @@ class ARXYieldDataAnalysisCLI:
             with open(self.portfolio_path, 'w') as file:
                 json.dump(default_portfolio, file)
             return default_portfolio
+
     def save_portfolio(self):
         with open(self.portfolio_path, 'w') as file:
             json.dump(self.portfolio, file)
@@ -34,30 +44,28 @@ class ARXYieldDataAnalysisCLI:
         while True:
             print("\nARX Yield Data Analysis CLI")
             print("-----------------------------------")
-            print("1. Import treasury data from API")
-            print("2. Save API data to database")
-            print("3. Set up, review, and update portfolio & weights")
-            print("4. Calculate VaR")
-            print("5. Calculate DV01")
-            print("6. Exit")
-            choice = input("Enter your choice: ")
+            print("I. Import treasury data from API")
+            print("S. Save API data to database")
+            print("P. Portfolio and weighting")
+            print("V. Calculate VaR")
+            print("D. Calculate DV01")
+            print("M. Portfolio Simulation")
+            print("E. Exit")
+            choice = input("Enter your choice: ").upper()
 
-            if choice == '1':
-                # Placeholder function for data import
+            if choice == 'I':
                 self.import_treasury_data()
-            elif choice == '2':
-                # Placeholder function for installing prerequisites
+            elif choice == 'S':
                 self.save_api_data_to_db()
-            elif choice == '3':
-                # Function to manage portfolio
+            elif choice == 'P':
                 self.manage_portfolio()
-            elif choice == '4':
-                # Placeholder function for VaR
+            elif choice == 'V':
                 self.calculate_var()
-            elif choice == '5':
-                # Placeholder function for DV01
+            elif choice == 'D':
                 self.calculate_dv01()
-            elif choice == '6':
+            elif choice == 'M':
+                self.simulate_portfolio()
+            elif choice == 'E':
                 break
 
     def import_treasury_data(self):
@@ -79,52 +87,20 @@ class ARXYieldDataAnalysisCLI:
 
         loader = ARXYieldDataAccess(data_directory=data_directory, config_directory=config_directory,
                                     sql_directory=sql_directory)
-        loader.execute_insert(data_directory)
+        loader.execute_insert()
         print("Saved API data to db successfully.")
 
-    def manage_portfolio(self):
-        while True:
-            print("\nPortfolio Management")
-            print("---------------------")
-            print("1. View Portfolio")
-            print("2. Update Portfolio")
-            print("3. Back to Main Menu")
-            choice = input("Enter your choice: ")
-
-            if choice == '1':
-                self.view_portfolio()
-            elif choice == '2':
-                self.update_portfolio()
-            elif choice == '3':
-                break
-
-    def view_portfolio(self):
-        portfolio_str = ",".join([f"{instrument}:{weight}" for instrument, weight in self.portfolio.items()])
-        print("\nCurrent Portfolio:")
-        print(portfolio_str)
-
-    def update_portfolio(self):
-        self.view_portfolio()
-        updated_portfolio_str = input("\nEnter the updated portfolio in the format 'Ticker1:0.3,Ticker2:0.3,...': ")
-        updated_portfolio = {}
-
-        for item in updated_portfolio_str.split(","):
-            if ":" in item:
-                instrument, weight = item.split(":")
-                updated_portfolio[instrument] = float(weight)
-            else:
-                # If no weight is provided, set it to 0 for now
-                updated_portfolio[item] = 0.0
-
-        # If user didn't specify weights, calculate even distribution
-        if sum(updated_portfolio.values()) == 0:
-            num_instruments = len(updated_portfolio)
-            even_weight = 1.0 / num_instruments
-            for instrument in updated_portfolio:
-                updated_portfolio[instrument] = even_weight
-
-        self.portfolio = updated_portfolio
-        self.save_portfolio()
+    def simulate_portfolio(self):
+        print("Simulating portfolio...")
+        # Placeholder for your portfolio simulation function
+        self.yield_data_access = ARXYieldDataAccess(data_directory=Path("sources"), config_directory=Path("config"),
+                                                    sql_directory=Path("SQL"))
+        pf = self.portfolio_manager.load_portfolio()
+        self.portfolio_simulation.set_weights(pf)
+        self.portfolio_simulation.simulate()
+        print("Delta yield:", self.portfolio_simulation.delta_yield[50:100])
+        print(self.portfolio_simulation.get_portfolio_delta_yield()[50:100])
+        print("Simulation complete!")
 
     def calculate_var(self):
         print("Calculating VaR...")
@@ -135,6 +111,9 @@ class ARXYieldDataAnalysisCLI:
         print("Calculating DV01...")
         # Add your DV01 calculation function here
         print("DV01 calculated!")
+
+    def manage_portfolio(self):
+        self.portfolio_manager.manage_portfolio()
 
 
 @click.group()

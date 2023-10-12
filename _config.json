@@ -1,0 +1,7 @@
+{
+  "server": "localhost,1433",
+  "database": "ARXFinance",
+  "username": "___",
+  "password": "___",
+  "quandl_key": "____"
+}

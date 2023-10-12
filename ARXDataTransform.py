@@ -2,7 +2,7 @@ import csv
 import pathlib
 
 
-class CSVTransformer:
+class ARXDataTransform:
     def __init__(self, source_file, destination_directory, ticker=None, date_index=0, yield_index=1):
         self.source_file = pathlib.Path(source_file)
         self.destination_directory = pathlib.Path(destination_directory)
@@ -43,24 +43,14 @@ class CSVTransformer:
 
 
 if __name__ == "__main__":
-    transformer = CSVTransformer(
+    transformer = ARXDataTransform(
         source_file=pathlib.Path('raw') / 'Commercial_Paper_Interest_Rates_010121-010123.csv',
         ticker="CommericalPaperIR",
         destination_directory='sources')
     transformer.transform()
-    transformer = CSVTransformer(
-        source_file=pathlib.Path('raw') / 'daily-treasury-rates.csv',
-        ticker="TreasuryRates2021",
-        destination_directory='sources')
-    transformer.transform()
 
-    transformer = CSVTransformer(
+    transformer = ARXDataTransform(
         source_file=pathlib.Path('raw') / 'ICE_BofA_US_High_Yield_Index_Effective_Yield_010121_010123.csv',
         ticker="ICE_Bofa_US_HighYield",
-        destination_directory='sources')
-    transformer.transform()
-    transformer = CSVTransformer(
-        source_file=pathlib.Path('raw') / 'US_Treasury_10Yr_Constant_Maturity_Yield_2021-01-01_to_2023-01-01.csv',
-        ticker="US_Treasury_10Yr_Constant_Maturity",
         destination_directory='sources')
     transformer.transform()

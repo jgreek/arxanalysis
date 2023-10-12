@@ -3,6 +3,7 @@ import quandl
 import pandas as pd
 from pathlib import Path
 
+
 class ARXApiDataAcquire:
     def __init__(self, ticker, start_date, end_date, maturities, config_directory=Path.cwd(),
                  destination_directory=Path.cwd(), nasdaq_datalink_code="USTREASURY/YIELD"):
@@ -50,6 +51,7 @@ class ARXApiDataAcquire:
                 subset.to_csv(filename, index=False)
                 print(f"Saved data for {maturity} to {filename}")
 
+
 # Usage
 if __name__ == "__main__":
     ticker = "US TREASURY"
@@ -59,4 +61,3 @@ if __name__ == "__main__":
     data_acquirer = ARXApiDataAcquire(ticker, start_date, end_date, maturities, config_directory=Path("config"),
                                       destination_directory=Path('sources'))
     data_acquirer.save_to_csv()
-
