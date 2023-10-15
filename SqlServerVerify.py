@@ -1,10 +1,10 @@
 import pyodbc
 
-# Define your connection parameters
+# Define connection parameters
 server = 'localhost,1433'  # Use 'localhost' because it's a Docker container, and port 1433 maps to the SQL Server port
 database = 'master'  # Use the 'master' database for testing connection
 username = 'SA'  # SA is the system administrator account in SQL Server
-password = 'Greekdev245'  # SA password as specified in your Docker run command
+password = 'Greekdev245'  # SA password as specified in the Docker run command
 
 # Create a connection string
 conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}"
@@ -24,9 +24,9 @@ import pyodbc
 
 # Define your connection parameters
 server = 'localhost,1433'  # Use 'localhost' because it's a Docker container, and port 1433 maps to the SQL Server port
-database = 'ARXFinance'  # Replace with the name of your database (ARXFinance in this case)
+database = 'ARXFinance'  # Replace with the name of the database (ARXFinance in this case)
 username = 'SA'  # SA is the system administrator account in SQL Server
-password = 'Greekdev245'  # SA password as specified in your Docker command
+password = 'Greekdev245'  # SA password as specified in the Docker command
 
 # Create a connection string
 conn_str = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}"

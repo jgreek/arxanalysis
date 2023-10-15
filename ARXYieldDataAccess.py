@@ -23,6 +23,40 @@ class ARXYieldDataAccess:
         except (FileNotFoundError, KeyError, json.JSONDecodeError) as e:
             raise Exception("Error loading database configuration from config.json") from e
 
+    def verify_db_config(self):
+        """Verify database configuration by checking the existence of the YieldData table and the GetYieldDataByDateRange stored procedure."""
+        conn = None  # Initialize connection as None
+        cursor = None  # Initialize cursor as None
+
+        try:
+            # Establish a connection to SQL Server
+            conn = pyodbc.connect(self.conn_str)
+            cursor = conn.cursor()
+
+            # Check the existence of the YieldData table
+            cursor.execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'YieldData'")
+            result = cursor.fetchone()
+            if not result:
+                return False, "YieldData table does not exist in the database."
+
+            # Check the existence of the GetYieldDataByDateRange stored procedure
+            cursor.execute(
+                "SELECT ROUTINE_NAME FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_NAME = 'GetYieldDataByDateRange' AND ROUTINE_TYPE='PROCEDURE'")
+            result = cursor.fetchone()
+            if not result:
+                return False, "GetYieldDataByDateRange stored procedure does not exist in the database."
+
+            return True, "Database configuration is verified successfully!"
+
+        except pyodbc.Error as e:
+            return False, f"Error: {e}"
+        finally:
+            if cursor:  # Close only if cursor exists
+                cursor.close()
+            if conn:  # Close only if connection exists
+                conn.close()
+
+
     def load_insert_query(self):
         try:
             # Load SQL query from the InsertDataYields.sql file
@@ -95,12 +129,12 @@ class ARXYieldDataAccess:
 
     def get_unique_instruments(self, df):
         """Retrieve unique instrument names from the data fetched between the given date range."""
-        return df["InstrumentName"].unique().tolist()
+        return sorted(df["InstrumentName"].unique().tolist())
 
 
 # Example usage:
 if __name__ == "__main__":
-    data_directory = Path("sources")  # Replace with your data directory path
+    data_directory = Path("sources")
     config_directory = Path("config")
     sql_directory = Path("SQL")
 
@@ -109,8 +143,8 @@ if __name__ == "__main__":
     loader.execute_insert()
 
     # Example usage of execute_get_yield_data_by_date_range
-    start_date = "2022-01-01"  # Replace with your desired start date
-    end_date = "2022-01-31"  # Replace with your desired end date
+    start_date = "2021-01-01"
+    end_date = "2023-01-01"
 
     df = loader.execute_get_yield_data_by_date_range(start_date, end_date)
     print(df[df["InstrumentName"] == "USTreasuryYield"])

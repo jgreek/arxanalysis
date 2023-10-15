@@ -6,6 +6,7 @@ import click
 from ARXApiDataAcquire import ARXApiDataAcquire
 from ARXPortfolioManager import ARXPortfolioManager
 from ARXPortfolioSimulation import ARXPortfolioSimulation
+from ARXVar import ARXHistoricalSimulation, ARXVaRCalculator
 from ARXYieldDataAccess import ARXYieldDataAccess
 
 
@@ -16,12 +17,18 @@ class ARXYieldDataAnalysisCLI:
         self.portfolio_path = self.configuration_directory / 'portfolio.json'
         self.yield_data_access = ARXYieldDataAccess(data_directory=Path("sources"), config_directory=Path("config"),
                                                     sql_directory=Path("SQL"))
+        success, result = self.yield_data_access.verify_db_config()
+        if not success:
+            print("ALERT: ", result)
+            self.error = result
+            return
+        self.error = None
         self.portfolio_manager = ARXPortfolioManager(self.configuration_directory / 'portfolio.json',
                                                      self.yield_data_access)
-        start_date = "2021-01-01"  # Replace with your desired start date
-        end_date = "2022-12-31"  # Replace with your desired end date
-        df = self.yield_data_access.execute_get_yield_data_by_date_range(start_date, end_date)
-        self.portfolio_simulation = ARXPortfolioSimulation(data=df)
+        start_date = "2021-01-01"
+        end_date = "2023-01-01"
+        self.yield_data = self.yield_data_access.execute_get_yield_data_by_date_range(start_date, end_date)
+        self.portfolio_simulation = ARXPortfolioSimulation(data=self.yield_data)
 
     def load_portfolio(self):
         try:
@@ -40,18 +47,48 @@ class ARXYieldDataAnalysisCLI:
         with open(self.portfolio_path, 'w') as file:
             json.dump(self.portfolio, file)
 
+    def display_file_contents(self, file_path: str):
+        """
+        Display the contents of the specified file.
+        """
+        try:
+            with open(file_path, 'r') as file:
+                print(file.read())
+        except FileNotFoundError:
+            print(f"\nERROR: The file {file_path} was not found!")
+        except Exception as e:
+            print(f"\nERROR reading {file_path}: {e}")
+
     def main_menu(self):
-        while True:
-            print("\nARX Yield Data Analysis CLI")
+        print("\nARX Yield Data Analysis CLI")
+        print("-----------------------------------")
+        print("Version: 1.0.0")
+        print("Programmer: John Greek")
+        print("Application Date: October 17, 2023")
+        print("\nWelcome to the ARX Yield Data Analysis tool.")
+
+        if self.error:
+            print("\n*** Pre-inspection Alert message: ***")
+            print(self.error)
+            print(
+                "\nPlease setup the database following the instruction in the README.md before using the application.")
             print("-----------------------------------")
+
+        while True:
+            print("\nPlease select an option from the menu below:")
+            print("-----------------------------------")
+
+            print("\nOptions:")
             print("I. Import treasury data from API")
             print("S. Save API data to database")
             print("P. Portfolio and weighting")
             print("V. Calculate VaR")
             print("D. Calculate DV01")
             print("M. Portfolio Simulation")
+            print("R. View readme.md")
+            print("T. View report.md")
             print("E. Exit")
-            choice = input("Enter your choice: ").upper()
+            choice = input("\nEnter your choice: ").upper()
 
             if choice == 'I':
                 self.import_treasury_data()
@@ -65,11 +102,16 @@ class ARXYieldDataAnalysisCLI:
                 self.calculate_dv01()
             elif choice == 'M':
                 self.simulate_portfolio()
+            elif choice == 'R':
+                self.display_file_contents("readme.md")
+            elif choice == 'T':
+                self.display_file_contents("report.md")
             elif choice == 'E':
+                print("\nThank you for using ARX Yield Data Analysis CLI. Goodbye!")
                 break
 
     def import_treasury_data(self):
-        print("Fetching treasury data from API...")
+        print("Fetching treasury yield data from API...")
         ticker = "US TREASURY"
         start_date = "2021-01-01"
         end_date = "2023-01-01"
@@ -98,18 +140,27 @@ class ARXYieldDataAnalysisCLI:
         pf = self.portfolio_manager.load_portfolio()
         self.portfolio_simulation.set_weights(pf)
         self.portfolio_simulation.simulate()
-        print("Delta yield:", self.portfolio_simulation.delta_yield[50:100])
-        print(self.portfolio_simulation.get_portfolio_delta_yield()[50:100])
+        print("Delta yield:", self.portfolio_simulation.delta_yield[20:100])
+        print(self.portfolio_simulation.get_portfolio_delta_yield()[20:100])
         print("Simulation complete!")
 
     def calculate_var(self):
-        print("Calculating VaR...")
-        # Add your VaR calculation function here
-        print("VaR calculated!")
+        print("Calculating VaR using the Historical Simulation methodology...")
+        portfolio_details = self.portfolio_manager.load_portfolio()
+        self.portfolio_simulation.set_weights(portfolio_details)
+        self.portfolio_simulation.simulate()
+        portfolio_delta_values = self.portfolio_simulation.get_portfolio_delta_yield()
+        calculator = ARXVaRCalculator(strategy=ARXHistoricalSimulation())
+        var_95 = calculator.compute(portfolio_delta_values, 0.95)
+        var_99 = calculator.compute(portfolio_delta_values, 0.99)
+        print(f"VaR 95%: {var_95}, VaR 99%: {var_99}")
+        print("VaR calculated.")
 
     def calculate_dv01(self):
         print("Calculating DV01...")
-        # Add your DV01 calculation function here
+        # Add DV01 calculation function here
+        yield_data = self.yield_data
+
         print("DV01 calculated!")
 
     def manage_portfolio(self):

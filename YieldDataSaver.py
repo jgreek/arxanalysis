@@ -59,7 +59,7 @@ if __name__ == "__main__":
         'host': 'localhost'
     }
 
-    data_directory = "data"  # replace with your path
+    data_directory = "data"
 
     saver = YieldDataSaver(db_params, data_directory)
     saver.fetch_and_save("AAPL")  # for example, using the AAPL ticker

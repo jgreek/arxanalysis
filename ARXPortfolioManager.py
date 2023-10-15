@@ -55,8 +55,8 @@ class ARXPortfolioManager:
         self.view_portfolio()
         updated_portfolio = {}
 
-        start_date = "2022-01-01"  # Replace with your desired start date
-        end_date = "2022-01-31"  # Replace with your desired end date
+        start_date = "2021-01-01"
+        end_date = "2023-01-01"
         df = self.yield_data_access.execute_get_yield_data_by_date_range(start_date, end_date)
         print(df[df["InstrumentName"] == "USTreasuryYield"])
 

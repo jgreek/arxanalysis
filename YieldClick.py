@@ -34,7 +34,7 @@ def run_workflow(tickers, start_date, end_date, create_db, drop_db):
         uniform_weight = 1.0 / len(tickers_weights)
         for ticker in tickers_weights:
             tickers_weights[ticker] = uniform_weight
-    print("Your ticker weights are: ", tickers_weights)
+    print("The ticker weights are: ", tickers_weights)
     # Convert date strings to date objects, if they are provided
     if start_date:
         start_date = datetime.strptime(start_date, '%Y-%m-%d').date()

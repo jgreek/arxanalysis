@@ -18,20 +18,20 @@ like Value at Risk (VaR) and DV01 to better understand the risk profile of the c
 ## Prerequisites
 
 * Python 3.x
-* SQL Express Database
+* SQL Server Database
 * Libraries:
     - `quandl`
-    - `sqlalchemy`
     - `pandas`
+    - Other libraries specified in requirements.txt
 
 To install the required libraries, run:
 \```bash
-pip install quandl sqlalchemy pandas
+pip install -r requirements.txt
 \```
 
 ## Data Acquisition
 
-U.S. Treasury bond yield data for various maturities is fetched from the `Quandl` API and stored in an SQL Express
+U.S. Treasury bond yield data for various maturities is fetched from the `Quandl` API and stored in an SQL Server
 database.
 
 * Instruments: 3-month, 1-year, 5-year, 10-year, 30-year.
@@ -52,20 +52,21 @@ computed for the portfolio, providing insights into daily fluctuations.
 
 * **User-adjusted Weightages**: An interactive module that allows users to adjust the weightage of instruments and
   recalculate VaR.
-* **Greeks Calculation**: The Delta, Gamma, and Vega for the portfolio are computed and analyzed.
 
 ## Getting Started
 
 1. Clone this repository to your local machine.
-2. Install necessary dependencies.
+2. Install necessary dependencies
 3. If you are running SQL Server from a Docker file, you'll need to run the container first. These instructions are
    specific to a Mac:
-    4. HOMEBREW_ACCEPT_EULA=Y brew install msodbcsql17 mssql-tools
-    5. docker pull mcr.microsoft.com/mssql/server:2017-latest
-    6. docker run -d --name ms-sql-server -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=YOURPASSWORD’ -p 1433:1433
+   1. HOMEBREW_ACCEPT_EULA=Y brew install msodbcsql17 mssql-tools
+   2. docker pull mcr.microsoft.com/mssql/server:2017-latest
+   3. docker run -d --name ms-sql-server -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=YOURPASSWORD’ -p 1433:1433
        mcr.microsoft.com/mssql/server:2017-latest
+   4. If you're running on a Mac, you will need to setup XCode command line tools. 
+      5. sudo xcode-select --install
 
-3. You will need a configuration file in config / config.json like so:
+4. You will need a database/API configuration file in config / config.json like so. There is a template located at _config.json.
    \```
    {
    "server": "localhost,1433",
@@ -77,34 +78,13 @@ computed for the portfolio, providing insights into daily fluctuations.
    \```
 
 
-3. You'll also need a Quandl key in order to fetch fixed income instrument yield data. You can skip this step by placing CSV files in the sources directory and then running the import tool. 
-4. Setup SQL database and ensure connection parameters in the code are correctly configured.
-4. Run the data acquisition script to fetch and store data.
-5. Run the main analysis script to get risk metrics.
-6. (Optional) Use the stretch features for additional insights.
-
-## Challenges
-
-During the course of this project, a number of challenges were encountered and successfully navigated:
-
-1. **Data Source Dilemma**:
-   Initially, my approach to acquiring data was through downloading CSV files from multiple sources. This presented a
-   challenge in ensuring consistency and reliability of the data. The process was simplified by ultimately leveraging
-   the `Quandl` API, which provided a more standardized and consistent data source.
-
-2. **Platform and Tool Constraints**:
-   I had a strong preference for using SQL Server, particularly due to its capabilities with stored procedures. However,
-   running on a Mac posed a challenge, as SQL Server isn't natively supported on macOS. The workaround was using Docker
-   containers. By downloading the correct Docker container for SQL Server, I was able to bridge the platform gap and
-   efficiently use SQL Server on macOS.
-
-3. **Data Formatting and Consistency**:
-   With multiple CSV files initially in the picture, a key challenge was to ensure consistent formatting. It was vital
-   that the data was not just consistent across different files but also reliable for analysis. Through a combination of
-   Python scripts and manual checks, I managed to format and validate the data for consistency and reliability.
-
-These challenges not only added complexity to the project but also provided valuable learning experiences. Overcoming
-them required a mix of technical knowledge, problem-solving skills, and adaptability.
+5. As specified above, you'll also need a Quandl key in order to fetch fixed income instrument yield data. You can skip this step by placing CSV files in the sources directory and then running the import tool. 
+6. Setup the SQL database server and ensure connection parameters in the code are correctly configured. 
+7. Create a database named ARXFinance.
+8. Create a new Python virtual environment like so: `python -m venv venv`
+9. Activate the environment: `.\venv\Scripts\activate` or `source venv/bin/activate`.
+10. Apply the python requirements file to obtain the necessary libraries: `pip install -r requirements.txt`.
+11. Run the CLI Main Menu by running `python ARXMainMenu.py`
 
 ## Conclusions and Insights
 
@@ -113,4 +93,4 @@ found [here](./REPORT.md).
 
 ## License
 
-This project is licensed under the MIT License.
+This project would be licensed under the MIT License.

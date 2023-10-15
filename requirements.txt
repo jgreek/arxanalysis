@@ -1,6 +1,6 @@
  quandl
- sqlalchemy
  pandas
  click
  pyodbc
  pytest
+ scipy
