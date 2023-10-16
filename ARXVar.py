@@ -13,8 +13,6 @@ class ARXVaRStrategy(ABC):
 
 
 # Implement Historical Simulation as an ARX VaR Strategy
-
-
 class ARXHistoricalSimulation(ARXVaRStrategy):
     """
     This class implements the Historical Simulation method for calculating Value at Risk (VaR).

@@ -5,6 +5,9 @@ from ARXYieldDataAccess import ARXYieldDataAccess
 
 
 class ARXDatabaseSetup:
+    """
+    ARXDatabaseSetup sets up the database tables and stored procedures.
+    """
     def __init__(self, sql_directory: Path, connection_string: str):
         self.sql_directory = sql_directory
         self.connection_string = connection_string

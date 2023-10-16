@@ -3,6 +3,23 @@ from ARXYieldDataAccess import ARXYieldDataAccess
 
 
 class ARXPortfolioManager:
+    """
+    The ARXPortfolioManager class provides tools for managing and updating a portfolio of financial instruments.
+
+    This class allows users to:
+    - Load and save portfolio configurations from/to a json file.
+    - View the current state of the portfolio.
+    - Update the portfolio with new instrument weightings based on available tickers fetched via `yield_data_access`.
+
+    Attributes:
+        configuration_directory (str): The directory containing portfolio configuration files.
+        portfolio_path (str): The path to the portfolio file.
+        portfolio (dict): Dictionary representation of the current portfolio with instrument names as keys and their weights as values.
+        yield_data_access (ARXYieldDataAccess): An instance of ARXYieldDataAccess (used for fetching the list of available tickers)
+        start_date (str): Start date.
+        end_date (str): End date.
+
+    """
     def __init__(self, configuration_directory, yield_data_access, start_date, end_date):
         self.configuration_directory = configuration_directory
         self.portfolio_path = self.configuration_directory

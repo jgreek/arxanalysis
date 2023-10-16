@@ -4,6 +4,29 @@ from pathlib import Path
 
 
 class ARXApiDataAcquire:
+    """
+    The ARXApiDataAcquire class fetches financial instrument data from the Quandl API
+    based on a provided set of parameters, and then saves the retrieved data into CSV format.
+
+    - Configuration loading from a JSON file to obtain Quandl API key.
+    - Data fetching from the Quandl based on specific tickers, date ranges, and maturities.
+    - Data persistence by saving the retrieved information into CSV files.
+
+    Attributes:
+        ticker (str): Instrument ticker name.
+        start_date (str): Data retrieval start date.
+        end_date (str): Data retrieval end date.
+        maturities (list): List of maturities to retrieve data for.
+        config_directory (pathlib.Path): Directory where config.json is located.
+        destination_directory (pathlib.Path): Directory where CSV files will be saved.
+        nasdaq_datalink_code (str): Default Quandl datalink code.
+
+    Methods:
+        load_config(): Load the API key from a config.json file.
+        get_yield_data(): Fetch data from Quandl.
+        save_to_csv(): Save the retrieved data into CSV format.
+    """
+
     def __init__(self, ticker, start_date, end_date, maturities, config_directory=Path.cwd(),
                  destination_directory=Path.cwd(), nasdaq_datalink_code="USTREASURY/YIELD"):
         self.ticker = ticker.replace(" ", "_")
@@ -31,9 +54,13 @@ class ARXApiDataAcquire:
             print("API key not loaded. Can't fetch data.")
             return None
 
-        quandl.ApiConfig.api_key = self.api_key
-        data = quandl.get(self.nasdaq_datalink_code, start_date=self.start_date, end_date=self.end_date)
-        return data[self.maturities]
+        try:
+            quandl.ApiConfig.api_key = self.api_key
+            data = quandl.get(self.nasdaq_datalink_code, start_date=self.start_date, end_date=self.end_date)
+            return data[self.maturities]
+        except Exception as e:
+            print(f"An error occurred while fetching data from Quandl: {e}")
+            return None
 
     def save_to_csv(self):
         data = self.get_yield_data()

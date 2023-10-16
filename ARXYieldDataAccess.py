@@ -5,6 +5,22 @@ import json
 
 
 class ARXYieldDataAccess:
+    """
+     ARXYieldDataAccess is responsible for providing direct interactions with a specified SQL database.
+
+     This class provides the ability to:
+     - Verify if the database configuration is correct by checking the existence of specified tables and stored procedures.
+     - Load and execute SQL queries to insert data into the database.
+     - Retrieve data from the database within a specified date range and filter by unique instruments (using a stored proc.)
+
+     Attributes:
+         data_directory (Path): Directory containing the source CSV files to be inserted into the database.
+         config_directory (Path): Directory containing the JSON configuration file for database connection.
+         sql_directory (Path): Directory containing the SQL query files.
+         conn_str (str): Connection string for the SQL Server database.
+
+     """
+
     def __init__(self, data_directory, config_directory, sql_directory):
         self.data_directory = Path(data_directory)
         self.config_directory = Path(config_directory)
