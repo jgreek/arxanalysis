@@ -1,18 +1,15 @@
 import json
-from pathlib import Path
-
-import click
-
-from ARXApiDataAcquire import ARXApiDataAcquire
 from ARXYieldDataAccess import ARXYieldDataAccess
 
 
 class ARXPortfolioManager:
-    def __init__(self, configuration_directory, yield_data_access: ARXYieldDataAccess):
+    def __init__(self, configuration_directory, yield_data_access, start_date, end_date):
         self.configuration_directory = configuration_directory
         self.portfolio_path = self.configuration_directory
         self.portfolio = self.load_portfolio()
         self.yield_data_access = yield_data_access
+        self.start_date = start_date
+        self.end_date = end_date
 
     def load_portfolio(self):
         try:
@@ -55,33 +52,41 @@ class ARXPortfolioManager:
         self.view_portfolio()
         updated_portfolio = {}
 
-        start_date = "2021-01-01"
-        end_date = "2023-01-01"
-        df = self.yield_data_access.execute_get_yield_data_by_date_range(start_date, end_date)
-        print(df[df["InstrumentName"] == "USTreasuryYield"])
-
-        unique_instruments = self.yield_data_access.get_unique_instruments(df)
-        if unique_instruments:
-            print("\nAvailable Tickers:")
-            for idx, ticker in enumerate(unique_instruments, 1):
-                print(f"{idx}. {ticker}")
+        try:
+            df = self.yield_data_access.execute_get_yield_data_by_date_range(self.start_date, self.end_date)
+            unique_instruments = self.yield_data_access.get_unique_instruments(df)
+            if unique_instruments:
+                print("\nAvailable Tickers:")
+                for idx, ticker in enumerate(unique_instruments, 1):
+                    print(f"{idx}. {ticker}")
+            else:
+                print("No tickers found. You can add them manually.")
+        except Exception as e:
+            print(f"Error fetching available tickers: {e}")
+            print("You can still add tickers manually.")
+            unique_instruments = []
 
         while True:
-            instrument_choice = input("\nEnter the number for the ticker (or type 'done' to finish): ")
+            instrument_choice = input(
+                "\nEnter the number for the ticker or type in a ticker name (or type 'done' to finish): ")
 
             if instrument_choice.lower() == 'done':
                 break
 
-            try:
-                instrument_index = int(instrument_choice) - 1  # Convert to zero-based index
-                if 0 <= instrument_index < len(unique_instruments):
-                    instrument = unique_instruments[instrument_index]
-                else:
-                    print("Invalid choice. Please choose a valid number.")
+            if instrument_choice.isdigit():
+                try:
+                    instrument_index = int(instrument_choice) - 1  # Convert to zero-based index
+                    if 0 <= instrument_index < len(unique_instruments):
+                        instrument = unique_instruments[instrument_index]
+                    else:
+                        print("Invalid choice. Please choose a valid number or type in a ticker name.")
+                        continue
+                except ValueError:
+                    print("Please enter a valid number or 'done'.")
                     continue
-            except ValueError:
-                print("Please enter a valid number or 'done'.")
-                continue
+            else:
+                # User entered a ticker name manually
+                instrument = instrument_choice
 
             weight = float(input(f"Enter the weight for {instrument}: "))
             updated_portfolio[instrument] = weight

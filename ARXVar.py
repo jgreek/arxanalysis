@@ -56,7 +56,7 @@ class ARXParametricSimulation(ARXVaRStrategy):
         z_score = norm.ppf(1 - percentile)
 
         # Calculate VaR
-        var = mean_return - z_score * std_dev
+        var = -(mean_return - z_score * std_dev)
 
         return var
 

@@ -1,11 +1,8 @@
 from pathlib import Path
-
-import pandas as pd
-
 from ARXYieldDataAccess import ARXYieldDataAccess
 
 
-class ARXDV01Calc:
+class ARXUsTreasuryDV01Calc:
     def __init__(self, face_value, yield_rate, time_to_maturity, coupon_rate=None):
         self.face_value = face_value
         self.yield_rate = yield_rate
@@ -93,55 +90,56 @@ class ARXDV01Calc:
         # Sum up the present value of the coupons and the face value to get the total price of the bond.
         return coupons_pv + face_value_pv
 
+    @staticmethod
+    def compute_dv01(row):
+        """
+        Compute the DV01 (Dollar Value of an 01) for a given row of instrument data.
 
-def compute_dv01(row):
-    """
-    Compute the DV01 (Dollar Value of an 01) for a given row of instrument data.
+        Parameters:
+        - row: A Pandas Series representing a row from a DataFrame containing yield data.
+               Expected columns are 'InstrumentName' and 'Yield'.
 
-    Parameters:
-    - row: A Pandas Series representing a row from a DataFrame containing yield data.
-           Expected columns are 'InstrumentName' and 'Yield'.
+        Returns:
+        - float: The calculated DV01 for the instrument.
+        """
 
-    Returns:
-    - float: The calculated DV01 for the instrument.
-    """
+        # Extract the name of the instrument (e.g., 'US_TREASURY_10_YR')
+        instrument = row['InstrumentName']
 
-    # Extract the name of the instrument (e.g., 'US_TREASURY_10_YR')
-    instrument = row['InstrumentName']
+        # Convert the yield from percentage to a decimal (e.g., 2.5% -> 0.025)
+        yield_rate = row['Yield'] / 100
 
-    # Convert the yield from percentage to a decimal (e.g., 2.5% -> 0.025)
-    yield_rate = row['Yield'] / 100
+        # Parse the time to maturity from the instrument name
+        # Extract the last two parts of the instrument name (e.g., '10_YR' from 'US_TREASURY_10_YR')
+        maturity_str = '_'.join(instrument.split('_')[-2:])
 
-    # Parse the time to maturity from the instrument name
-    # Extract the last two parts of the instrument name (e.g., '10_YR' from 'US_TREASURY_10_YR')
-    maturity_str = '_'.join(instrument.split('_')[-2:])
+        # Check if the instrument is a T-Bill with maturity in months
+        if 'MO' in maturity_str:
+            # Convert the maturity string to a numerical value and then to years
+            # For instance, '3_MO' becomes 3/12 = 0.25 years
+            time_to_maturity = int(maturity_str.replace('MO', '').replace('_', '')) / 12
+        # Check if the instrument has a maturity in years
+        elif 'YR' in maturity_str:
+            # Convert the maturity string to a numerical value
+            # For instance, '10_YR' becomes 10 years
+            time_to_maturity = int(maturity_str.replace('YR', '').replace('_', ''))
+        else:
+            # Raise an error for unknown maturity formats
+            raise ValueError(f"Unknown maturity format in instrument: {instrument}")
 
-    # Check if the instrument is a T-Bill with maturity in months
-    if 'MO' in maturity_str:
-        # Convert the maturity string to a numerical value and then to years
-        # For instance, '3_MO' becomes 3/12 = 0.25 years
-        time_to_maturity = int(maturity_str.replace('MO', '').replace('_', '')) / 12
-    # Check if the instrument has a maturity in years
-    elif 'YR' in maturity_str:
-        # Convert the maturity string to a numerical value
-        # For instance, '10_YR' becomes 10 years
-        time_to_maturity = int(maturity_str.replace('YR', '').replace('_', ''))
-    else:
-        # Raise an error for unknown maturity formats
-        raise ValueError(f"Unknown maturity format in instrument: {instrument}")
+        # Determine the type of treasury instrument based on its maturity
+        # T-Bills and 1-Year T-Notes are considered zero-coupon
+        if 'MO' in maturity_str or '1_YR' in maturity_str:
+            treasury = ARXUsTreasuryDV01Calc(face_value=1000, yield_rate=yield_rate, time_to_maturity=time_to_maturity)
+        else:
+            # For other maturities, assume they are coupon bonds and set the coupon rate to be equal to the yield
+            # Note: In a real-world scenario, the coupon rate should be retrieved from accurate sources.
+            # Due to the coupon rate not being available via the API, use yield rate for now but provide for it to be used in future.
+            treasury = ARXUsTreasuryDV01Calc(face_value=1000, yield_rate=yield_rate, time_to_maturity=time_to_maturity,
+                                             coupon_rate=yield_rate)
 
-    # Determine the type of treasury instrument based on its maturity
-    # T-Bills and 1-Year T-Notes are considered zero-coupon
-    if 'MO' in maturity_str or '1_YR' in maturity_str:
-        treasury = ARXDV01Calc(face_value=1000, yield_rate=yield_rate, time_to_maturity=time_to_maturity)
-    else:
-        # For other maturities, assume they are coupon bonds and set the coupon rate to be equal to the yield
-        # Note: In a real-world scenario, the coupon rate should be retrieved from accurate sources
-        treasury = ARXDV01Calc(face_value=1000, yield_rate=yield_rate, time_to_maturity=time_to_maturity,
-                               coupon_rate=yield_rate)
-
-    # Return the computed DV01 for the instrument
-    return treasury.dv01
+        # Return the computed DV01 for the instrument
+        return treasury.dv01
 
 
 if __name__ == "__main__":
@@ -152,5 +150,5 @@ if __name__ == "__main__":
                                            sql_directory=Path("SQL"))
     df = yield_data_access.execute_get_yield_data_by_date_range(start_date, end_date)
     df = df[df["InstrumentName"].str.startswith("US_TREASURY_")]
-    df['DV01'] = df.apply(compute_dv01, axis=1)
+    df['DV01'] = df.apply(ARXUsTreasuryDV01Calc.compute_dv01, axis=1)
     print(df[["InstrumentName", "DV01"]])

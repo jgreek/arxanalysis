@@ -28,7 +28,7 @@ class ARXDatabaseSetup:
                     try:
                         cursor.execute(sql_script)
                         conn.commit()
-                        print(f"Executed {sql_file.name} successfully!")
+                        print(f"Executed {sql_file.name} successfully.")
                     except Exception as e:
                         print(f"Error executing {sql_file.name}: {e}")
 

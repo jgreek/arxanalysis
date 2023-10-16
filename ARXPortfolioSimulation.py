@@ -1,6 +1,8 @@
 import pandas as pd
 
-
+"""
+Provides a portfolio simulation to compute a portfolio's delta yield.
+"""
 class ARXPortfolioSimulation:
 
     def __init__(self, data: pd.DataFrame):

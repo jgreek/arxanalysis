@@ -46,7 +46,7 @@ class ARXYieldDataAccess:
             if not result:
                 return False, "GetYieldDataByDateRange stored procedure does not exist in the database."
 
-            return True, "Database configuration is verified successfully!"
+            return True, "Database configuration has been verified successfully."
 
         except pyodbc.Error as e:
             return False, f"Error: {e}"
@@ -55,7 +55,6 @@ class ARXYieldDataAccess:
                 cursor.close()
             if conn:  # Close only if connection exists
                 conn.close()
-
 
     def load_insert_query(self):
         try:
